@@ -1,0 +1,38 @@
+{% extends "layout.html" %}
+
+
+{% block content %}
+<h1>Flask + Bootstrap 5</h1>
+<p class="lead">Testing API call and rendering users dynamically.</p>
+
+<h2>User List</h2>
+<ul id="user-list" class="list-group">
+    <li class="list-group-item">Loading users...</li>
+
+</ul>
+
+
+<script>
+    GetUsers();
+    function GetUsers() {
+        GetResponse("/api/get_users", {}, {
+            onSuccess: (res) => {
+                const list = document.getElementById("user-list");
+                list.innerHTML = "";
+
+                res.data.forEach(u => {
+                    const li = document.createElement("li");
+                    li.className = "list-group-item";
+                    li.innerText = u.name;
+                    list.appendChild(li);
+                });
+            },
+
+            onError: (res) => {
+                document.getElementById("user-list").innerHTML =
+                    `<li class="list-group-item text-danger">${res.message}</li>`;
+            }
+        });
+    }
+</script>
+{% endblock %}

@@ -1,0 +1,11 @@
+[
+  {
+    "approvalId": 1,
+    "taskId": 1,
+    "submittedBy": 4,
+    "reviewedBy": 1,
+    "status": "Approved",
+    "reviewComment": "Looks good, approved.",
+    "reviewedAt": "2026-02-02T10:15:00Z"
+  }
+]
