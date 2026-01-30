@@ -14,32 +14,57 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
 
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
+    <link rel="stylesheet" href="https://cdn.datatables.net/responsive/2.5.0/css/responsive.dataTables.min.css">
+
+    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://cdn.ckeditor.com/ckeditor5/39.0.1/classic/ckeditor.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/responsive/2.5.0/js/dataTables.responsive.min.js"></script>
 
     <script src="{{ url_for('static', filename='script.js') }}"></script>
 </head>
 <body>
 
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
-        <div class="container-fluid">
-            <a class="navbar-brand" href="{{ url_for('home') }}">Task Management System</a>
-            <div class="collapse navbar-collapse">
-                <ul class="navbar-nav">
-                    <li class="nav-item"><a class="nav-link" href="{{ url_for('home') }}">Home</a></li>
-                    <li class="nav-item"><a class="nav-link" href="{{ url_for('about') }}">About</a></li>
-                    <li class="nav-item"><a class="nav-link" href="{{ url_for('contact') }}">Contact</a></li>
+    <!-- ======= Header ======= -->
+    <header class="app-header d-flex align-items-center justify-content-between px-3 shadow-sm">
+        <div class="header-left d-flex align-items-center">
+            <a href="{{ url_for('dashboard') }}" class="app-name text-decoration-none">Task Management System</a>
+        </div>
+        <div class="header-right d-flex align-items-center">
+            <div class="dropdown">
+                <a class="d-flex align-items-center text-decoration-none dropdown-toggle user-menu" href="#" role="button" data-bs-toggle="dropdown">
+                    <i class="bi bi-person-circle me-2"></i> 
+                    Hemi Khan
+                </a>
+                <ul class="dropdown-menu dropdown-menu-end">
+                    <li><a class="dropdown-item" href="{{ url_for('dashboard') }}">Profile</a></li>
+                    <li><a class="dropdown-item" href="{{ url_for('admin') }}">Admin Panel</a></li>
+                    <li><hr class="dropdown-divider"></li>
+                    <li><a class="dropdown-item text-danger" href="{{ url_for('admin') }}">Logout</a></li>
                 </ul>
             </div>
         </div>
-    </nav>
+    </header>
 
+    <!-- ======= Main Content ======= -->
+    <main class="app-content">
+        <div class="container-fluid p-4">
+            {% block content %}{% endblock %}
+        </div>
+    </main>
 
-    <div class="container mt-4">
-        {% block content %}{% endblock %}
-    </div>
+    <script>
+        // Sidebar toggle for mobile
+        const sidebar = document.getElementById('sidebar');
+        const toggleBtn = document.getElementById('sidebarToggle');
+        toggleBtn?.addEventListener('click', () => {
+            sidebar.classList.toggle('active');
+        });
+    </script>
 
 </body>
 </html>

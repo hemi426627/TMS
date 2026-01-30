@@ -1,36 +1,110 @@
 {% extends "layout.html" %}
 
-
 {% block content %}
-<h1>Flask + Bootstrap 5</h1>
-<p class="lead">Testing API call and rendering users dynamically.</p>
 
-<h2>User List</h2>
-<ul id="user-list" class="list-group">
-    <li class="list-group-item">Loading users...</li>
+<style>
+</style>
 
+<!-- Tabs -->
+<ul class="nav nav-tabs" id="appTabs">
+    <li class="nav-item">
+        <a class="nav-link" href="#" data-tab="dashboard">Dashboard</a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link" href="#" data-tab="map">Map</a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link" href="#" data-tab="orders">Orders</a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link" href="#" data-tab="reports">Reports</a>
+    </li>
 </ul>
 
+<!-- Tab Content -->
+<div id="tabContent" class="mt-4">
+    <div class="tab-pane" id="dashboard">
+        <div class="mb-3 d-flex justify-content-between align-items-center">
+            <button class="btn btn-primary" onclick="openModal('Add New User', '<p>Form or content goes here</p>')">Add New</button>
+        </div>
+
+        <div class="table-container mt-4">
+            <table id="dynamicTable" class="display nowrap modern-table" style="width:100%">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Name</th>
+                        <th>Email</th>
+                        <th>UserName</th>
+                        <th>Role</th>
+                        <th>Active</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="tab-pane" id="map">
+        <h2>Map</h2>
+        <p>Map content will go here.</p>
+    </div>
+
+    <div class="tab-pane" id="orders">
+        <h2>Orders</h2>
+        <p>Orders content will go here.</p>
+    </div>
+
+    <div class="tab-pane" id="reports">
+        <h2>Reports</h2>
+        <p>Reports content will go here.</p>
+    </div>
+</div>
 
 <script>
-    GetUsers();
+    document.addEventListener('DOMContentLoaded', function () {
+        dynamicTabs();
+    });
+
+    function dynamicTabs() {
+        const tabs = document.querySelectorAll('#appTabs .nav-link');
+        const panes = document.querySelectorAll('#tabContent .tab-pane');
+
+        // Set active tab
+        function setActiveTab(tabName) {
+            tabs.forEach(tab => tab.classList.toggle('active', tab.dataset.tab === tabName));
+            panes.forEach(pane => pane.classList.toggle('active', pane.id === tabName));
+
+            // Optional: load content dynamically when tab changes
+            if (tabName === 'dashboard') GetUsers();
+        }
+
+        // Load default tab from hash or dashboard
+        let currentTab = window.location.hash ? window.location.hash.replace('#', '') : 'dashboard';
+        setActiveTab(currentTab);
+
+        // Click event
+        tabs.forEach(tab => {
+            tab.addEventListener('click', function (e) {
+                e.preventDefault();
+                const tabName = this.dataset.tab;
+                setActiveTab(tabName);
+                history.replaceState(null, null, '#' + tabName);
+            });
+        });
+    }
+
     function GetUsers() {
         GetResponse("/api/get_users", {}, {
             onSuccess: (res) => {
-                const list = document.getElementById("user-list");
-                list.innerHTML = "";
-
-                res.data.forEach(u => {
-                    const li = document.createElement("li");
-                    li.className = "list-group-item";
-                    li.innerText = u.name;
-                    list.appendChild(li);
+                initDynamicTable('#dynamicTable', res.data, {
+                    pageLength: 50,
+                    ordering: false
                 });
             },
-
             onError: (res) => {
-                document.getElementById("user-list").innerHTML =
-                    `<li class="list-group-item text-danger">${res.message}</li>`;
+                list.innerHTML = `<li class="list-group-item text-danger">${res.message}</li>`;
             }
         });
     }

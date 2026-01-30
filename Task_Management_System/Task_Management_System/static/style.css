@@ -1,22 +1,207 @@
+/* ====== Fonts ====== */
 body {
-    font-family: Arial, sans-serif;
-    margin: 20px;
+    font-family: 'Outfit', sans-serif;
+    background: linear-gradient(135deg, #f5f7fa, #e0e7ff); /* soft background gradient */
+    color: #1e293b;
+    margin: 0;
 }
 
-nav a {
-    margin-right: 10px;
-    text-decoration: none;
-    color: blue;
+/* ====== Color Palette ====== */
+:root {
+    --primary-color: #4f46e5; /* main purple */
+    --primary-dark: #3730a3; /* dark purple for header */
+    --secondary-color: #6366f1;
+    --gradient-text: linear-gradient(90deg, #4f46e5, #6366f1);
+    --header-bg: var(--primary-dark); /* header dark purple */
+    --header-text: #ffffff;
+    --link-color: #4f46e5;
+    --link-hover: #4338ca;
+    --danger-color: #dc2626;
+    --tab-bg: #f3f4f6;
+    --tab-active-bg: linear-gradient(90deg, #4f46e5, #6366f1);
+    --tab-text: #1e293b;
+    --tab-active-text: #fff;
 }
 
-form {
-    margin-bottom: 10px;
+/* ====== Header ====== */
+.app-header {
+    height: 70px;
+    background-color: var(--header-bg);
+    color: var(--header-text);
+    box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 2rem;
 }
 
-input {
-    margin-right: 5px;
+.app-name {
+    font-weight: 700;
+    font-size: 1.7rem;
+    color: #ffffff; /* white text for contrast */
 }
 
-button {
-    margin-right: 5px;
+.user-menu {
+    color: var(--header-text);
 }
+
+/* ====== Main Content ====== */
+.app-content {
+    margin-top: 20px;
+}
+
+/* ====== Dropdown ====== */
+.dropdown-menu {
+    min-width: 180px;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+}
+
+.dropdown-item:hover {
+    background: var(--primary-color);
+    color: #fff;
+    transition: all 0.3s;
+}
+
+/* ====== Buttons ====== */
+.btn-primary {
+    background: linear-gradient(90deg, #4f46e5, #6366f1);
+    border: none;
+    color: #fff;
+    font-weight: 500;
+    transition: all 0.3s;
+}
+
+    .btn-primary:hover {
+        background: linear-gradient(90deg, #4338ca, #4f46e5);
+    }
+
+/* ====== Gradient headings ====== */
+h1, h2, h3, h4, h5, h6 {
+    background: var(--gradient-text);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    font-weight: 600;
+}
+
+/* Tabs container */
+.nav-tabs {
+    border-bottom: none;
+    display: flex;
+    gap: 0.5rem;
+}
+
+    /* Tab links */
+    .nav-tabs .nav-link {
+        background: #f3f4f6;
+        color: #1e293b;
+        border-radius: 8px;
+        padding: 0.5rem 1.5rem;
+        font-weight: 500;
+        position: relative;
+        transition: all 0.3s;
+        cursor: pointer;
+        border: none;
+    }
+
+        /* Hover effect */
+        .nav-tabs .nav-link:hover {
+            background: var(--primary-color);
+            color: #fff;
+        }
+
+        /* Active tab gradient underline animation */
+        .nav-tabs .nav-link.active::after {
+            content: '';
+            position: absolute;
+            left: 0;
+            bottom: 0;
+            width: 100%;
+            height: 4px;
+            border-radius: 4px;
+            background: linear-gradient(90deg, #4f46e5, #6366f1);
+            animation: slideIn 0.3s ease forwards;
+        }
+
+@keyframes slideIn {
+    from {
+        width: 0;
+    }
+
+    to {
+        width: 100%;
+    }
+}
+
+/* Tab content */
+.tab-pane {
+    display: none;
+    animation: fadeIn 0.3s ease forwards;
+}
+
+    .tab-pane.active {
+        display: block;
+    }
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+
+/* ====== Responsive ====== */
+@media (max-width: 576px) {
+    .app-header {
+        padding: 0 1rem;
+        gap: 5px;
+    }
+
+    .app-name {
+        font-size: 1.4rem;
+    }
+}
+
+/* Modern Table Styles */
+.modern-table th {
+    background: linear-gradient(90deg, #4f46e5, #6366f1);
+    color: #fff;
+    font-weight: 600;
+    text-align: center;
+}
+
+.modern-table td {
+    text-align: center;
+    vertical-align: middle;
+}
+
+.modern-table tbody tr:hover {
+    background: rgba(99, 102, 241, 0.1);
+}
+
+/* Responsive container */
+.table-container {
+    overflow-x: auto;
+}
+
+/* Pagination styling */
+.dataTables_wrapper .dataTables_paginate .paginate_button {
+    background: #6366f1;
+    color: #fff !important;
+    border-radius: 5px;
+    padding: 5px 10px;
+    margin: 2px;
+}
+
+    .dataTables_wrapper .dataTables_paginate .paginate_button.current {
+        background: #4f46e5 !important;
+    }

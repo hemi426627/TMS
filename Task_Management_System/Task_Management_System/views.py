@@ -4,20 +4,14 @@ from Task_Management_System.services import json_service as js
 from Task_Management_System.services.response_helpers import *
 
 
-# ================= HOME ==================
+# ================= Dashboard ==================
 @app.route("/")
-@app.route("/home")
-def home():
-    return render_template("index.html", title="Home")
+@app.route("/dashboard")
+def dashboard():
+    return render_template("index.html", title="Dashboard")
 
 
-# ================= ABOUT ==================
-@app.route("/about")
-def about():
-    return render_template("about.html", title="About")
-
-
-# ================= CONTACT ==================
-@app.route("/contact")
-def contact():
-    return render_template("contact.html", title="Contact")
+# ================= Admin Panel ==================
+@app.route("/admin")
+def admin():
+    return render_template("admin.html", title="Admin Panel")

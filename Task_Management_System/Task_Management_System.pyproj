@@ -63,8 +63,7 @@
     <Content Include="Task_Management_System\static\favicon.ico" />
     <Content Include="Task_Management_System\static\script.js" />
     <Content Include="Task_Management_System\static\style.css" />
-    <Content Include="Task_Management_System\templates\about.html" />
-    <Content Include="Task_Management_System\templates\contact.html" />
+    <Content Include="Task_Management_System\templates\admin.html" />
     <Content Include="Task_Management_System\templates\index.html" />
     <Content Include="Task_Management_System\templates\layout.html" />
   </ItemGroup>
