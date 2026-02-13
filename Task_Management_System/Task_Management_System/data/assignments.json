@@ -1,0 +1,35 @@
+[
+  {
+    "taskAssignId": 1,
+    "taskId": 3,
+    "assignTo": 3,
+    "status": "IN_PROGRESS",
+    "workStatus": "WORKING",
+    "assigned_date": "2026-02-10",
+    "eta_datetime": "2026-02-11T12:02",
+    "startedAt": "2026-02-12T16:27",
+    "completedAt": ""
+  },
+  {
+    "taskAssignId": 2,
+    "taskId": 1,
+    "assignTo": 3,
+    "status": "NOT_STARTED",
+    "workStatus": "NOT_STARTED",
+    "assigned_date": "2026-02-10",
+    "eta_datetime": "2026-02-12T16:07",
+    "startedAt": "",
+    "completedAt": ""
+  },
+  {
+    "taskAssignId": 3,
+    "taskId": 5,
+    "assignTo": 2,
+    "status": "NOT_STARTED",
+    "workStatus": "NOT_STARTED",
+    "assigned_date": "2026-02-10",
+    "eta_datetime": "2026-03-06T08:48",
+    "startedAt": "",
+    "completedAt": ""
+  }
+]

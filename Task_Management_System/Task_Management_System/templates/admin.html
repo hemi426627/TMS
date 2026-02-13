@@ -1,0 +1,1269 @@
+﻿{% extends "layout.html" %}
+
+{% block content %}
+
+<style>
+    .text-decoration-line-through {
+        text-decoration: line-through;
+    }
+
+    .opacity-75 {
+        opacity: 0.75;
+    }
+</style>
+
+<!--#region Tabs -->
+<ul id="appTabs" class="nav nav-tabs">
+    <li><a class="nav-link active" data-tab="tasks" data-load="LoadTasks">Tasks</a></li>
+    <li><a class="nav-link" data-tab="dailyTasks" data-load="LoadDailyTasks">Daily Tasks</a></li>
+    <li><a class="nav-link" data-tab="master" data-load="LoadMasterCategories">Master</a></li>
+    <li><a class="nav-link" data-tab="users" data-load="LoadUsers">Users</a></li>
+    <li><a class="nav-link" data-tab="roles" data-load="LoadRoles">Roles</a></li>
+    <li><a class="nav-link" data-tab="activityLogs" data-load="LoadActivity">Activity Logs</a></li>
+</ul>
+<!--#endregion Tabs -->
+<!--#region Tab Content -->
+<div id="tabContent" class="mt-4">
+    <!--#region Task Tab Content -->
+    <div class="tab-pane" id="tasks">
+        <div class="table-responsive">
+            
+            <div class="btn-group" role="group" aria-label="Show Archive Tasks" style="position:absolute;left:241px;">
+                <input type="checkbox" class="btn-check" id="ShowArchiveTasks" autocomplete="off" onchange="LoadTasks();">
+                <label class="btn btn-outline-primary" for="ShowArchiveTasks">Show Archive Tasks</label>
+            </div>
+
+            <table id="tblTasks" class="table table-striped table-bordered">
+                <thead class="table-theme">
+                    <tr>
+                        <th class="text-center">Task ID</th>
+                        <th class="text-center">Sub-Tasks</th>
+                        <th class="text-center">Task Name</th>
+                        <th class="text-center">Task Detail</th>
+                        <th class="text-center">Priority</th>
+                        <th class="text-center">Status</th>
+                        <th class="text-center">Lead By</th>
+                        <th class="text-center">Assignee</th>
+                        <th class="text-center">Approvals</th>
+                        <th class="text-center">Created By</th>
+                        <th class="text-center">Actions</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
+    </div>
+    <!--#endregion Task Tab Content -->
+    <!--#region Daily Task Tab Content -->
+    <div class="tab-pane" id="dailyTasks"></div>
+    <!--#endregion Daily Task Tab Content -->
+    <!--#region Master Tab Content -->
+    <div class="tab-pane" id="master">
+        <div class="row mb-3">
+            <div class="col-lg-3 col-md-3">
+                <label class="form-label fw-bold">Select Category</label>
+                <select id="ddlMasterCategory" class="form-select" onchange="OnChangeMasterDropdown(this)"><option value="">-- Select Category --</option></select>
+            </div>
+        </div>
+
+        <div class="table-responsive">
+            <table id="tblMaster" class="table table-striped table-bordered w-100">
+                <thead class="table-theme">
+                    <tr>
+                        <th class="text-center">Code</th>
+                        <th class="text-center">Label</th>
+                        <th class="text-center">Order</th>
+                        <th class="text-center">Action</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
+
+    </div>
+    <!--#endregion Master Tab Content -->
+    <!--#region Users Tab Content -->
+    <div class="tab-pane" id="users">
+        <div class="table-responsive">
+            <table id="tblUsers" class="table table-striped table-bordered" style="width:100%">
+                <thead class="table-theme">
+                    <tr>
+                        <th class="text-center">User ID</th>
+                        <th>Name</th>
+                        <th>Email</th>
+                        <th>UserName</th>
+                        <th>Password</th>
+                        <th class="text-center">Role</th>
+                        <th class="text-center">Active</th>
+                        <th class="text-center">Actions</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
+    </div>
+    <!--#endregion Users Tab Content -->
+    <!--#region Roles Tab Content -->
+    <div class="tab-pane" id="roles">
+        <div class="table-responsive">
+            <table id="tblRoles" class="table table-striped table-bordered" style="width:100%">
+                <thead class="table-theme">
+                    <tr>
+                        <th class="text-center">Role ID</th>
+                        <th class="text-center">Role Name</th>
+                        <th class="text-center">Actions</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
+    </div>
+    <!--#endregion Roles Tab Content -->
+    <!--#region Activity Logs Tab Content -->
+    <div class="tab-pane" id="activityLogs"></div>
+    <!--#endregion Activity Logs Tab Content -->
+</div>
+<!--#endregion Tab Content -->
+
+<script>
+
+    //#region Load Tabs
+    dynamicTabs({
+        defaultTab: 'tasks'
+    });
+    //#endregion Load Tabs
+
+    //#region drp Loads
+    var drpRoles = [];
+    var drpWorkStatus = [];
+    var drpTaskStatus = [];
+    var drpTaskPriority = [];
+    var drpEntityType = [];
+    var drpSubTasks = [];
+    var drpUsers = [];
+    LoadAdminPanelDropdown();
+
+    function LoadAdminPanelDropdown() {
+        dynamicResponse(`/api/get_admin_panel_dropdown`, {}, {
+            onSuccess: (res) => {
+                drpRoles = res.data.drpRoles;
+                drpWorkStatus = res.data.drpWorkStatus;
+                drpTaskStatus = res.data.drpTaskStatus;
+                drpTaskPriority = res.data.drpTaskPriority;
+                drpEntityType = res.data.drpEntityType;
+                drpSubTasks = res.data.drpSubTasks;
+                drpUsers = res.data.drpUsers;
+            },
+            onError: (err) => {
+                toastr.error(`Failed to load dropdown data`);
+            }
+        });
+    }
+    //#endregion drp Loads
+
+    //#region Tasks CRUD
+    function LoadTasks() {
+        var showArchive = $("#ShowArchiveTasks").is(":checked");
+        dynamicResponse(`/api/get_main_tasks?showArchive=${showArchive}`, {}, {
+            onSuccess: (res) => {
+                var html = TaskContent(res.data || []);
+                dynamicTable({
+                    tableId: "tblTasks",
+                    html: html,
+                    data: [],
+                    buttonText: "+ Add New Tasks",
+                    buttonOnClick: "GetAddOrEditTasks(0)",
+                    paging: true,
+                    pageLength: 50
+                });
+                LoadAdminPanelDropdown();
+            },
+            onError: (err) => toastr.error(err.message || "Failed to load tasks")
+        });
+    }
+    function LoadSubTasks(btn, parentTaskId) {
+        var showArchive = $("#ShowArchiveTasks").is(":checked");
+        const table = $('#tblTasks').DataTable();
+        const tr = $(btn).closest('tr');
+        const row = table.row(tr);
+
+        if (row.child.isShown()) {
+            row.child.hide();
+            tr.removeClass('shown');
+            return;
+        }
+
+        row.child(GetSubTaskTemplate(parentTaskId)).show();
+        tr.addClass('shown');
+
+        const subTableId = `#subtask-table-${parentTaskId}`;
+
+        dynamicResponse(`/api/get_sub_tasks_by_TaskId?taskId=${parentTaskId}&showArchive=${showArchive}`, {}, {
+            onSuccess: res => {
+                var html = TaskContent(res.data || [], true);
+                dynamicTable({
+                    tableId: `subtask-table-${parentTaskId}`,
+                    html: html,
+                    data: [],
+                    paging: true,
+                    pageLength: 5
+                });
+            },
+            onError: err => toastr.error(err.message || "Failed to load sub-tasks")
+        });
+    }
+
+    function GetSubTaskTemplate(taskId) {
+        var html = "";
+
+        html += `<div class="subtask-wrapper table-responsive p-1">`;
+        html += `<table id="subtask-table-${taskId}" class="table table-striped table-bordered">`;
+        html += `<thead class="table-theme">`;
+        html += `<tr">`;
+        html += `<th class="text-center">Task ID</th>`;
+        html += `<th class="text-center">Task Name</th>`;
+        html += `<th class="text-center">Task Detail</th>`;
+        html += `<th class="text-center">Priority</th>`;
+        html += `<th class="text-center">Status</th>`;
+        html += `<th class="text-center">Lead By</th>`;
+        html += `<th class="text-center">Assignee</th>`;
+        html += `<th class="text-center">Approvals</th>`;
+        html += `<th class="text-center">Created By</th>`;
+        html += `<th class="text-center">Actions</th>`;
+        html += `</tr">`;
+        html += `</thead">`;
+        html += `<tbody></tbody>`;
+        html += `</table>`;
+        html += `</div>`;
+
+        return html;
+    }
+    function TaskContent(tasksData, subTask = false) {
+        var html = "";
+        console.log(tasksData)
+        tasksData.forEach(task => {
+            const assigneesHtml = task.assignee?.length ? task.assignee.map(a => `<a href="javascript:void(0)"class="text-primary me-1"onclick="AssigneeDetail(${task.taskId},${a.assignTo},'${a.assignToName}')">${a.assignToName}</a>`).join(", ") : "-";
+            const approvalsHtml = task.approvals?.length ? `<button class="btn btn-sm btn-outline-success me-1"onclick='openApprovalViewModal(${JSON.stringify(task.approvals)})'>View</button>` : "";
+
+            html += `<tr data-task-id="${task.taskId}">`;
+
+            html += `<td class="text-center">${task.taskId}</td>`;
+
+            if (!subTask) {
+                const subCount = task.totalSubTasks ?? 0;
+
+                html += `<td class="text-center">`;
+                if (subCount > 0) {
+                    html += `<a href="javascript:void(0)" class="btn btn-sm btn-outline-secondary" id="subtaskId_${task.taskId}" onclick="LoadSubTasks(this, ${task.taskId})">${subCount} Sub-Task(s)</a>`;
+                }
+                else {
+                    html += `-`;
+                }
+                html += `</td>`;
+            }
+
+            html += `<td>${task.taskName}</td>`;
+            html += `<td class="text-center"><i class="bi bi-eye-fill text-primary cursor-pointer" data-tippy-content="View Task Detail" onclick="ShowTaskDetail(${task.taskId},'${task.taskName}')"></i></td>`;
+            html += `<td class="text-center">${task.priority ?? "-"}</td>`;
+            html += `<td class="text-center">${task.status ?? "-"}</td>`;
+            html += `<td>${task.leadBy ?? "-"}</td>`;
+            html += `<td>${assigneesHtml}</td>`;
+            html += `<td>${approvalsHtml}</td>`;
+            html += `<td>${task.createdBy ?? "-"}</td>`;
+
+            html += `<td class="text-center">`;
+            html += `<i class="bi bi-people me-2 text-info cursor-pointer" data-tippy-content="Assignments" onclick="GetAddOrEditTaskAssignments(${task.taskId})"></i>`;
+            if (task.isRestore) {
+                html += `<i class="bi bi-arrow-counterclockwise me-2 text-secondary cursor-pointer" data-tippy-content="Restore Task" onclick="ArchiveOrRestorTask(${task.taskId}, ${subTask}, ${task.isRestore})"></i>`;
+            }
+            else {
+                html += `<i class="bi bi-archive me-2 text-secondary cursor-pointer" data-tippy-content="Archive Task" onclick="ArchiveOrRestorTask(${task.taskId}, ${subTask}, ${task.isRestore})"></i>`;
+            }
+            html += `<i class="bi bi-pencil-square me-2 text-primary cursor-pointer" data-tippy-content="Edit Task" onclick="GetAddOrEditTasks(${task.taskId})"></i>`;
+            html += `<i class="bi bi-trash text-danger cursor-pointer" data-tippy-content="Remove Task" onclick="DeleteTask(${task.taskId})"></i>`;
+            html += `</td>`;
+
+            html += `</tr>`;
+        });
+
+        return html;
+    }
+
+    function ShowTaskDetail(taskId, taskName) {
+        dynamicResponse(`/api/get_task_by_TaskId?taskId=${taskId}`, {}, {
+            onSuccess: (res) => {
+                dynamicModal({ title: taskName, content: res.data.taskdetail, modalWidth: 80 });
+            },
+            onError: (res) => {
+                console.error(res.message || "Failed to load task detail");
+            }
+        });
+    }
+
+    function GetAddOrEditTaskAssignments(taskId) {
+        const modalTitle = "Assignments";
+        const btnText = "Save";
+
+        var html = "";
+        html += `<button class="btn btn-outline-primary btn-sm mb-2" id="addRowBtn">➕ Add Assignment</button>`;
+        html += `<div class="table-responsive">`;
+        html += `<table class="table table-bordered align-middle" id="assignmentTable">`;
+        html += `<thead class="table-theme">`;
+        html += `<tr>`;
+        html += `<th>Assign To</th>`;
+        html += `<th>Work Status</th>`;
+        html += `<th>Status</th>`;
+        html += `<th>ETA</th>`;
+        html += `<th>Assigned</th>`;
+        html += `<th>Started</th>`;
+        html += `<th>Completed</th>`;
+        html += `<th>Action</th>`;
+        html += `</tr>`;
+        html += `</thead>`;
+        html += `<tbody></tbody>`;
+        html += `</table>`;
+        html += `</div>`;
+
+        dynamicModal({
+            title: modalTitle,
+            content: html,
+            contentAction: function () {
+                dynamicResponse(`/api/get_assignment_by_TaskId?taskId=${taskId}`, {}, {
+                    onSuccess: (res) => {
+                        res.data.forEach((item, i) => {
+                            $("#assignmentTable tbody").append(assignmentRowHtml(i, item));
+                        });
+                        initSelect2InDynamicModal(".select2");
+                    },
+                    onError: (err) => toastr.error(err.message || "Failed to load task data")
+                });
+
+                $("#addRowBtn").on("click", () => {
+                    const index = $("#assignmentTable tbody tr").length;
+                    $("#assignmentTable tbody").append(assignmentRowHtml(index));
+                    initSelect2InDynamicModal(".select2");
+                });
+            },
+            btnAddEditText: btnText,
+            addEditOnClick: function () {
+                var AssignmentList = [];
+
+                $("#assignmentTable tbody tr").each(function () {
+                    const row = $(this);
+
+                    AssignmentList.push({
+                        taskAssignId: Number(row.find(".taskAssignId").val()),
+                        taskId: taskId,
+                        assignTo: Number(row.find(".assignTo").val()),
+                        workStatus: row.find(".workStatus").val(),
+                        status: row.find(".status").val(),
+                        eta_datetime: row.find(".eta").val(),
+                        assigned_date: row.find(".assignedDate").val(),
+                        startedAt: row.find(".startedAt").val(),
+                        completedAt: row.find(".completedAt").val(),
+                        isRemoved: row.find(".isRemoved").val() === "true"
+                    });
+                });
+
+                AddOrEditAssignment(AssignmentList);
+
+                return true;
+            },
+            modalWidth: 90
+        });
+    }
+    function assignmentRowHtml(index, data = {}) {
+        var html = "";
+        html += `<tr data-index="${index}">`;
+
+        html += `<td>`;
+        html += `<input type="hidden" class="taskAssignId" value="${data.taskAssignId || 0}">`;
+        html += `<input type="hidden" id="taskId" value="${data.taskId}">`;
+        html += `<input type="hidden" class="isRemoved" value="false">`;
+        html += `<select class="form-control select2 assignTo">`;
+        html += `<option value="">[Select]</option>`;
+        drpUsers.forEach(item => {
+            html += `<option value="${item.code}" ${item.code == data.assignTo ? "selected" : ""}>${item.label}</option>`;
+        });
+        html += `</select>`;
+        html += `</td>`;
+
+        html += `<td>`;
+        html += `<select class="form-control select2 workStatus">`;
+        drpWorkStatus
+            .sort((a, b) => Number(a.order) - Number(b.order))
+            .forEach(item => {
+                html += `<option value="${item.code}" ${item.code == data.workStatus ? "selected" : ""}>${item.label}</option>`;
+            });
+        html += `</select>`;
+        html += `</td>`;
+
+        html += `<td>`;
+        html += `<select class="form-control select2 status">`;
+        drpTaskStatus
+            .sort((a, b) => Number(a.order) - Number(b.order))
+            .forEach(item => {
+                html += `<option value="${item.code}" ${item.code == data.status ? "selected" : ""}>${item.label}</option>`;
+            });
+        html += `</select>`;
+        html += `</td>`;
+
+        html += `<td><input type="datetime-local" class="form-control eta" value="${formatDate(data.eta_datetime)}"></td>`;
+        html += `<td><input type="date" class="form-control assignedDate" value="${formatDate(data.assigned_date, true)}"></td>`;
+        html += `<td><input type="datetime-local" class="form-control startedAt" value="${formatDate(data.startedAt)}"></td>`;
+        html += `<td><input type="datetime-local" class="form-control completedAt" value="${formatDate(data.completedAt)}"></td>`;
+
+        html += `<td class="text-center">`;
+        html += `<button class="btn btn-outline-danger btn-sm remove-row" onclick="assignmentRowRemove(this)">❌</button>`;
+        html += `</td>`;
+
+        html += `</tr>`;
+
+        return html;
+    }
+    function assignmentRowRemove(this_) {
+        const row = $(this_).closest("tr");
+        const taskAssignId = Number(row.find(".taskAssignId").val());
+
+        if (taskAssignId > 0) {
+            // EXISTING → mark for delete (visual only)
+            row.find(".isRemoved").val("true");
+            row.addClass("table-danger text-decoration-line-through opacity-75");
+            row.find("input, select").prop("disabled", true);
+        } else {
+            // NEW → remove immediately
+            row.remove();
+        }
+    }
+
+    function formatDate(d, dateOnly = false) {
+        if (!d) return "";
+        const dt = new Date(d);
+        return dateOnly
+            ? dt.toISOString().slice(0, 10)
+            : dt.toISOString().slice(0, 16);
+    }
+    function AddOrEditAssignment(AssignmentList) {
+        dynamicResponse(
+            `/api/add_edit_assignments`,
+            AssignmentList,
+            {
+                onSuccess: res => {
+                    LoadTasks();
+                    toastr.success(res.message);
+                },
+                onError: err => {
+                    toastr.error(err.message);
+                }
+            },
+            "POST"
+        );
+    }
+    function AssigneeDetail(taskId, assignTo, assignToName) {
+        dynamicResponse(`/api/get_assignment_by_TaskId_AssignTo?taskId=${taskId}&assignTo=${assignTo}`, {}, {
+            onSuccess: (res) => {
+                const data = res.data;
+                const parseDate = (d) => d ? new Date(d).toISOString().slice(0, 16) : "";
+
+                var html = "";
+                html += `<div class="row g-3">`;
+                html += `<input type="hidden" id="taskAssignId" value="${data.taskAssignId}">`;
+                html += `<input type="hidden" id="taskId" value="${data.taskId}">`;
+                html += `<input type="hidden" id="assignTo" value="${data.assignTo}">`;
+
+                html += `<div class="col-lg-8 col-md-8 col-sm-8 mb-3" style="border-right:1px solid #ddd">`;
+                html += `<div class="row">`;
+
+                html += `<div class="col-lg-12 col-md-12 col-sm-12 mb-3">`;
+                html += `<label class="form-label fw-bold">Work Status</label>`;
+                html += `<select class="form-select" id="workStatus">`;
+                html += `<option value="">[Select Option]</option>`;
+                drpWorkStatus
+                    .sort((a, b) => Number(a.order) - Number(b.order))
+                    .forEach(item => {
+                        html += `<option value="${item.code}" ${(data.workStatus == item.code ? "selected" : "")}>${item.label}</option>`;
+                    });
+                html += `</select>`;
+                html += `</div>`;
+
+                html += `<div class="col-lg-12 col-md-12 col-sm-12 mb-3">`;
+                html += `<label class="form-label fw-bold">Task Status</label>`;
+                html += `<select class="form-select" id="taskStatus">`;
+                html += `<option value="">[Select Option]</option>`;
+                drpTaskStatus
+                    .sort((a, b) => Number(a.order) - Number(b.order))
+                    .forEach(item => {
+                        html += `<option value="${item.code}" ${(data.status == item.code ? "selected" : "")}>${item.label}</option>`;
+                    });
+                html += `</select>`;
+                html += `</div>`;
+
+                html += `<div class="col-lg-12 col-md-12 col-sm-12 mb-3">`;
+                html += `<label class="form-label fw-bold">ETA</label>`;
+                html += `<input type="datetime-local" class="form-control" id="eta_datetime" value="${parseDate(data.eta_datetime)}">`;
+                html += `</div>`;
+
+                html += `<div class="col-lg-12 col-md-12 col-sm-12 mb-3">`;
+                html += `<label class="form-label fw-bold">Assigned Date</label>`;
+                html += `<input type="date" class="form-control" id="assigned_date" value="${data.assigned_date}">`;
+                html += `</div>`;
+
+                html += `<div class="col-lg-12 col-md-12 col-sm-12 mb-3">`;
+                html += `<label class="form-label fw-bold">Started At</label>`;
+                html += `<input type="datetime-local" class="form-control" id="startedAt" value="${parseDate(data.startedAt)}">`;
+                html += `</div>`;
+
+                html += `<div class="col-lg-12 col-md-12 col-sm-12 mb-3">`;
+                html += `<label class="form-label fw-bold">Completed At</label>`;
+                html += `<input type="datetime-local" class="form-control" id="completedAt" value="${parseDate(data.completedAt)}">`;
+                html += `</div>`;
+
+                html += `</div>`;
+                html += `</div>`;
+
+                // decide color based on etaStatus
+                let statusBg = "bg-secondary";
+                if (data.etaStatus === "ON_TRACK" || data.etaStatus === "COMPLETED_ON_TIME") statusBg = "bg-success";
+                else if (data.etaStatus === "EXCEEDED" || data.etaStatus === "COMPLETED_LATE") statusBg = "bg-danger";
+                else if (data.etaStatus === "NONE") statusBg = "bg-info";
+
+                // approval badge color
+                let approvalBg = "bg-secondary";
+                if (data.approvalStatus === "APPROVED") approvalBg = "bg-success";
+                else if (data.approvalStatus === "REJECTED") approvalBg = "bg-danger";
+                else if (data.approvalStatus === "PENDING_APPROVAL") approvalBg = "bg-warning text-dark";
+
+                html += `<div class="col-lg-4 col-md-4 col-sm-12 mb-3">`;
+
+                html += `<div class="card shadow-sm h-100 border-0">`;
+                html += `<div class="card-header text-center text-white fw-bold ${statusBg}">ETA STATUS</div>`;
+                html += `<div class="card-body">`;
+                html += `<div class="mb-3 text-center"><h5 class="fw-bold mb-1">${data.durationMsg}</h5><small class="text-muted">Time vs ETA</small></div>`;
+
+                html += `<div class="row justify-content-center">`;
+                html += `<div class="col-lg-6 col-md-6 col-sm-6 mb-2"><label class="fw-bold text-muted">Total Duration</label><div class="fw-bold">${data.duration ? `${data.duration.days}d ${data.duration.hours}h ${data.duration.minutes}m` : "—"}</div></div>`;
+                html += `<div class="col-lg-6 col-md-6 col-sm-6 mb-2" style="text-align: end;"><label class="fw-bold text-muted">Remaining Days</label><div class="fw-bold">${data.remainingDays !== null ? data.remainingDays + " day(s)" : "—"}</div></div>`;
+                html += `</div>`;
+
+                html += `<hr/>`;
+                html += `<div class="d-flex justify-content-between mb-2"><label class="fw-bold text-muted">Approval Status</label><span class="badge ${approvalBg}">${data.approvalStatus || "NOT SUBMITTED"}</span></div>`;
+                if (data.submitComment) {
+                    html += `<div class="d-flex justify-content-between mb-2"><label class="fw-bold text-muted">Notes</label><span class="badge bg-primary text-wrap text-end" style="white-space: normal; max-width: 280px;">${data.submitComment}</span></div>`;
+                }
+
+                if (data.reviewedBy) {
+                    html += `<div class="d-flex justify-content-between mb-2"><label class="fw-bold text-muted">Review By</label><span class="badge bg-info">${data.reviewedBy || "-"}</span></div>`;
+                    html += `<div class="d-flex justify-content-between mb-2"><label class="fw-bold text-muted">Review Comment</label><span class="badge bg-primary text-wrap text-end" style="white-space: normal; max-width: 280px;">${data.reviewComment || "-"}</span></div>`;
+                }
+                html += `</div>`;
+                html += `</div>`;
+
+                html += `</div>`;
+
+                html += `</div>`;
+
+                dynamicModal({
+                    title: `Assignment Details - ${assignToName}`,
+                    content: html,
+                    modalWidth: 70,
+                    btnAddEditText: "Save",
+                    addEditOnClick: function () {
+                        var AssignmentList = [];
+
+                        var payload = new Object();
+                        payload.taskAssignId = parseInt($("#taskAssignId").val()) ?? 0;
+                        payload.taskId = parseInt($("#taskId").val()) ?? 0;
+                        payload.assignTo = parseInt($("#assignTo").val()) ?? 0;
+                        payload.workStatus = $("#workStatus").val();
+                        payload.status = $("#taskStatus").val();
+                        payload.assigned_date = $("#assigned_date").val();
+                        payload.eta_datetime = $("#eta_datetime").val();
+                        payload.startedAt = $("#startedAt").val();
+                        payload.completedAt = $("#completedAt").val();
+                        AssignmentList.push(payload);
+
+                        AddOrEditAssignment(AssignmentList);
+
+                        return true;
+                    }
+                });
+            },
+            onError: (res) => {
+                toastr.error(res.message || "Failed to load assignment details");
+            }
+        });
+    }
+
+    function GetAddOrEditTasks(taskId = 0) {
+        const modalTitle = taskId > 0 ? "Edit Task" : "Add New Task";
+        const btnText = taskId > 0 ? "Update" : "Add";
+
+        var html = "";
+        html += `<div class="row g-3">`;
+        html += `<input type="hidden" id="taskId" value="${taskId}">`;
+
+        html += `<div class="col-lg-6 col-md-6 col-sm-6 mb-3">`;
+        html += `<label class="form-label fw-bold">Task Name <span style="color:red;">*</span></label>`;
+        html += `<input type="text" class="form-control" id="taskName" placeholder="Enter Task Name">`;
+        html += `</div>`;
+
+        html += `<div class="col-lg-6 col-md-6 col-sm-6 mb-3">`;
+        html += `<label class="form-label fw-bold">Sub Tasks</label>`;
+        html += `<select class="form-control select2" multiple id="subTasks">`;
+        drpSubTasks.forEach(item => {
+            html += `<option value="${item.code}">${item.label}</option>`;
+        });
+        html += `</select>`;
+        html += `</div>`;
+
+        html += `<div class="col-lg-4 col-md-4 col-sm-4 mb-3">`;
+        html += `<label class="form-label fw-bold">Priority</label>`;
+        html += `<select class="form-control select2" id="priority">`;
+        drpTaskPriority
+            .sort((a, b) => Number(a.order) - Number(b.order))
+            .forEach(item => {
+                html += `<option value="${item.code}">${item.label}</option>`;
+            });
+        html += `</select>`;
+        html += `</div>`;
+
+        html += `<div class="col-lg-4 col-md-4 col-sm-4 mb-3">`;
+        html += `<label class="form-label fw-bold">Status</label>`;
+        html += `<select class="form-control select2" id="status">`;
+        drpWorkStatus
+            .sort((a, b) => Number(a.order) - Number(b.order))
+            .forEach(item => {
+                html += `<option value="${item.code}">${item.label}</option>`;
+            });
+        html += `</select>`;
+        html += `</div>`;
+
+        html += `<div class="col-lg-4 col-md-4 col-sm-4 mb-3">`;
+        html += `<label class="form-label fw-bold">Lead By</label>`;
+        html += `<select class="form-control select2" id="leadBy">`;
+        html += `<option value="">[Select Option]</option>`;
+        drpUsers.forEach(item => {
+            html += `<option value="${item.code}">${item.label}</option>`;
+        });
+        html += `</select>`;
+        html += `</div>`;
+
+        html += `<div class="col-lg-12 col-md-12 col-sm-12 mb-3">`;
+        html += `<label class="form-label fw-bold">Task Detail <span style="color:red;">*</span></label>`;
+        html += `<textarea class="form-control" id="taskDetail" placeholder="Enter Task Detail" row=4></textarea>`;
+        html += `</div>`;
+
+        html += `</div>`;
+
+
+        dynamicModal({
+            title: modalTitle,
+            content: html,
+            contentAction: function () {
+                initSelect2InDynamicModal('#subTasks', { placeholder: "Search Sub Task" });
+                initSelect2InDynamicModal('#priority', { placeholder: "Search Priority" });
+                initSelect2InDynamicModal('#status', { placeholder: "Search Status" });
+                initSelect2InDynamicModal('#leadBy', { placeholder: "Search Lead By" });
+                initCKEditor('#taskDetail', { placeholder: "Enter Task Detail..." })
+                    .then(editor => {
+                        if (taskId > 0) {
+                            dynamicResponse(`/api/get_task_by_TaskId?taskId=${taskId}`, {}, {
+                                onSuccess: (res) => {
+                                    const task = res.data;
+                                    $("#taskId").val(task.taskId);
+                                    $("#taskName").val(task.taskName);
+                                    $("#subTasks").val(task.subTaskId).trigger("change");
+                                    editor.setData(task.taskdetail || '');
+                                    $("#priority").val(task.priority).trigger("change");
+                                    $("#status").val(task.status).trigger("change");
+                                    $("#leadBy").val(task.leadId).trigger("change");
+                                },
+                                onError: (err) => toastr.error(err.message || "Failed to load task data")
+                            });
+                        }
+                    });
+            },
+            btnAddEditText: btnText,
+            addEditOnClick: function () {
+                const id = parseInt($("#taskId").val()) || 0;
+                const taskData = {
+                    taskName: $("#taskName").val(),
+                    subTaskId: ($("#subTasks").val()?.length ? $("#subTasks").val().map(Number) : null),
+                    taskdetail: getCKEditorData('#taskDetail'),
+                    priority: $("#priority").val(),
+                    status: $("#status").val() == "" ? null : $("#status").val(),
+                    leadId: parseInt($("#leadBy").val()) ?? 0,
+                };
+
+                if (taskData.taskName == "") {
+                    toastr.error("Task Name is Required.");
+                    return false;
+                }
+
+                if (taskData.priority == null) {
+                    toastr.error("Task Priority is Required.");
+                    return false;
+                }
+
+                if (taskData.status == null) {
+                    toastr.error("Task Status is Required.");
+                    return false;
+                }
+
+                if (taskData.taskdetail == "") {
+                    toastr.error("Task Detail is Required.");
+                    return false;
+                }
+
+                destroyCKEditor('#taskDetail');
+                AddOrEditTask(taskData, id);
+
+                return true;
+            },
+            modalWidth: 70
+        });
+    }
+    function AddOrEditTask(taskData, taskId = 0) {
+        dynamicResponse(
+            `/api/add_edit_task?task_id=${taskId}`,
+            taskData,
+            {
+                onSuccess: res => {
+                    LoadTasks();
+                    toastr.success(res.message || "Task Updated Successfully!");
+                },
+                onError: err => {
+                    toastr.error(err.message || "Failed to update task");
+                }
+            },
+            "POST"
+        );
+    }
+    function DeleteTask(taskId) {
+        Swal.fire({
+            title: 'Are you sure?',
+            text: "You won't be able to revert this!",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#3085d6',
+            cancelButtonColor: '#d33',
+            confirmButtonText: 'Yes, delete it!',
+            cancelButtonText: 'Cancel'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                dynamicResponse(`/api/remove_task_by_Id/${taskId}`, {}, {
+                    onSuccess: (res) => {
+                        toastr.success(res.message || "Task deleted successfully!");
+                        LoadTasks(); // refresh table
+                    },
+                    onError: (err) => {
+                        toastr.error(err.message || "Failed to delete task");
+                    }
+                }, "POST"); // keep POST to match your API
+            }
+        });
+    }
+
+    function ArchiveOrRestorTask(taskId, isSubTask = false, restoreTask = false) {
+        const isRestore = restoreTask === true;
+
+        Swal.fire({
+            title: isRestore ? 'Restore Task?' : 'Archive Task?',
+            text: isRestore ? "You want to restore this task!" : "You want to archive this task!",
+            icon: isRestore ? 'question' : 'warning',
+            showCancelButton: true,
+            confirmButtonText: isRestore ? 'Yes, restore it!' : 'Yes, archive it!',
+        }).then((result) => {
+
+            if (!result.isConfirmed) return;
+
+            dynamicResponse(`/api/archive_restore_task?taskId=${taskId}&isSubTask=${isSubTask}&restoreTask=${restoreTask}`, {}, {
+                onSuccess: (res) => {
+                    toastr.success(
+                        res.message || (isRestore ? "Task restored successfully!" : "Task archived successfully!")
+                    );
+                    LoadTasks(); 
+                },
+                onError: (err) => {
+                    toastr.error(err.message || "Action failed");
+                }
+            }, "POST");
+        });
+    }
+    //#endregion Tasks CRUD
+
+    //#region User CRUD
+    function LoadUsers() {
+        dynamicResponse("/api/get_users", {}, {
+            onSuccess: (res) => {
+                LoadAdminPanelDropdown();
+
+                let html = "";
+                res.data.forEach(row => {
+                    html += `<tr>`;
+                    html += `<td class="text-center">${row.userId}</td>`;
+                    html += `<td>${row.name}</td>`;
+                    html += `<td>${row.email}</td>`;
+                    html += `<td>${row.username}</td>`;
+                    html += `<td>${row.password}</td>`;
+
+                    html += `<td class="text-center">`;
+                    let optionsHtml = drpRoles.map(r => {
+                        const selected = r.label === row.role ? "selected" : "";
+                        return `<option value="${r.code}" ${selected}>${r.label}</option>`;
+                    }).join("");
+
+                    html += `<select class="form-select role-select" data-userid="${row.userId}" onchange="UpdateUserRole(this)"><option value="">Select Option</option>${optionsHtml}</select>`;
+                    html += `</td>`;
+
+
+                    html += `<td class="text-center">${row.active}</td>`;
+                    html += `<td class="text-center">`;
+                    html += `<button class="btn btn-sm btn-outline-primary me-2" onclick="GetAddEditUserModal(${row.userId})"><i class="bi bi-pencil-square"></i></button>`;
+                    html += `<button class="btn btn-sm btn-outline-danger"onclick="DeleteUser(${row.userId})"><i class="bi bi-trash"></i></button>`;
+                    html += `</td>`;
+                    html += `</tr>`;
+                });
+
+                dynamicTable({
+                    tableId: "tblUsers",
+                    html: html,
+                    data: [],
+                    buttonText: "+ Add New Users",
+                    buttonOnClick: "GetAddEditUserModal(0)",
+                    paging: true,
+                    pageLength: 50
+                });
+            },
+            onError: (res) => {
+                console.error(res.message || "Failed to load users");
+            }
+        });
+    }
+    function GetAddEditUserModal(userId = 0) {
+        const modalTitle = userId > 0 ? "Edit User" : "Add New User";
+        const btnText = userId > 0 ? "Update" : "Add";
+
+        var html = "";
+        html += `<form id="dynamicUserForm">`;
+        html += `<input type="hidden" id="userId" value="">`;
+
+        html += `<div class="mb-3">`;
+        html += `<label for="userName" class="form-label">Name</label>`;
+        html += `<input type="text" class="form-control" id="userName" required>`;
+        html += `</div>`;
+
+        html += `<div class="mb-3">`;
+        html += `<label for="userEmail" class="form-label">Email</label>`;
+        html += `<input type="email" class="form-control" id="userEmail" required>`;
+        html += `</div>`;
+
+        html += `<div class="mb-3">`;
+        html += `<label for="userUsername" class="form-label">Username</label>`;
+        html += `<input type="text" class="form-control" id="userUsername" required>`;
+        html += `</div>`;
+
+        html += `<div class="mb-3">`;
+        html += `<label for="userPassword" class="form-label">Password</label>`;
+        html += `<input type="password" class="form-control" id="userPassword">`;
+        html += `<small class="text-muted">Leave blank if you don't want to change password</small>`;
+        html += `</div>`;
+
+        html += `<div class="mb-3">`;
+        html += `<label for="userRole" class="form-label">Role</label>`;
+        html += `<select class="form-select" id="userRole"><option value="">Select Option</option>${drpRoles.map(r => `<option value="${r.code}">${r.label}</option>`).join("")}</select>`;
+        html += `</div>`;
+        html += `</form>`;
+
+        dynamicModal({
+            title: modalTitle,
+            content: html,
+            contentAction: function () {
+                if (userId > 0) {
+                    dynamicResponse(`/api/get_user_by_Id/${userId}`, {}, {
+                        onSuccess: (res) => {
+                            const user = res.data;
+                            $("#userId").val(user.userId);
+                            $("#userName").val(user.name);
+                            $("#userEmail").val(user.email);
+                            $("#userUsername").val(user.username);
+                            $("#userRole").val(user.roleId || "").trigger("change");
+                        },
+                        onError: (err) => toastr.error(err.message || "Failed to load user data")
+                    });
+                }
+            },
+            btnAddEditText: btnText,
+            addEditOnClick: function () {
+                const userData = {
+                    name: $("#userName").val(),
+                    email: $("#userEmail").val(),
+                    username: $("#userUsername").val(),
+                    roleId: parseInt($("#userRole").val())
+                };
+
+                const password = $("#userPassword").val();
+                if (password) userData.password = password;
+
+                // Use hidden field userId to decide add/edit
+                const id = parseInt($("#userId").val()) || 0;
+
+                AddEditUser(userData, id);
+
+                return true;
+            },
+            modalWidth: 40
+        });
+    }
+    function AddEditUser(userData, userId = 0) {
+        dynamicResponse(
+            `/api/add_edit_user?user_id=${userId}`,
+            userData,
+            {
+                onSuccess: res => {
+                    LoadUsers();
+                    toastr.success(res.message || "User Updated Successfully!");
+                },
+                onError: err => {
+                    toastr.error(err.message || "Failed to update role");
+                }
+            },
+            "POST"
+        );
+    }
+    function DeleteUser(userId) {
+        Swal.fire({
+            title: 'Are you sure?',
+            text: "You won't be able to revert this!",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#3085d6',
+            cancelButtonColor: '#d33',
+            confirmButtonText: 'Yes, delete it!',
+            cancelButtonText: 'Cancel'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                dynamicResponse(`/api/remove_user_by_Id/${userId}`, {}, {
+                    onSuccess: (res) => {
+                        toastr.success(res.message || "User deleted successfully!");
+                        LoadUsers(); // refresh table
+                    },
+                    onError: (err) => {
+                        toastr.error(err.message || "Failed to delete user");
+                    }
+                }, "POST"); // keep POST to match your API
+            }
+        });
+    }
+    function UpdateUserRole(this_) {
+        const $el = $(this_);
+        const userId = $el.data("userid");
+        const newRoleId = parseInt($el.val());
+        if (userId && userId > 0) {
+            AddEditUser({ roleId: newRoleId }, userId);
+        }
+    }
+    //#endregion User CRUD
+
+    //#region Role CRUD
+    function LoadRoles() {
+        dynamicResponse("/api/get_roles", {}, {
+            onSuccess: (res) => {
+                let html = "";
+                res.data.forEach(row => {
+                    html += `<tr>`;
+                    html += `<td class="text-center">${row.roleId}</td>`;
+                    html += `<td class="text-center">${row.rolename}</td>`;
+                    html += `<td class="text-center">`;
+                    html += `<button class="btn btn-sm btn-outline-primary me-2" onclick="GetAddEditRoleModal(${row.roleId})"><i class="bi bi-pencil-square"></i></button>`;
+                    html += `<button class="btn btn-sm btn-outline-danger"onclick="DeleteRole(${row.roleId})"><i class="bi bi-trash"></i></button>`;
+                    html += `</td>`;
+                    html += `</tr>`;
+                });
+
+                dynamicTable({
+                    tableId: "tblRoles",
+                    html: html,
+                    data: [],
+                    buttonText: "+ Add New Roles",
+                    buttonOnClick: "GetAddEditRoleModal(0)",
+                    paging: true,
+                    pageLength: 50
+                });
+
+                LoadAdminPanelDropdown();
+            },
+            onError: (res) => {
+                console.error(res.message || "Failed to load roles");
+            }
+        });
+    }
+    function GetAddEditRoleModal(roleId = 0) {
+        const modalTitle = roleId > 0 ? "Edit Role" : "Add New Role";
+        const btnText = roleId > 0 ? "Update" : "Add";
+
+        var html = "";
+        html += `<form id="dynamicRoleForm">`;
+        html += `<input type="hidden" id="roleId" value="">`;
+
+        html += `<div class="mb-3">`;
+        html += `<label for="RoleName" class="form-label">Role Name</label>`;
+        html += `<input type="text" class="form-control" id="RoleName" required>`;
+        html += `</div>`;
+        html += `</form>`;
+
+        dynamicModal({
+            title: modalTitle,
+            content: html,
+            contentAction: function () {
+                if (roleId > 0) {
+                    dynamicResponse(`/api/get_role_by_Id/${roleId}`, {}, {
+                        onSuccess: (res) => {
+                            const role = res.data;
+                            $("#roleId").val(role.roleId);
+                            $("#RoleName").val(role.rolename);
+                        },
+                        onError: (err) => toastr.error(err.message || "Failed to load role data")
+                    });
+                }
+            },
+            btnAddEditText: btnText,
+            addEditOnClick: function () {
+                const id = parseInt($("#roleId").val()) || 0;
+                const roleData = {
+                    rolename: $("#RoleName").val(),
+                };
+
+                AddEditRole(roleData, id);
+
+                return true;
+            },
+            modalWidth: 20
+        });
+    }
+    function AddEditRole(roleData, roleId = 0) {
+        dynamicResponse(
+            `/api/add_edit_role?role_id=${roleId}`,
+            roleData,
+            {
+                onSuccess: res => {
+                    LoadRoles();
+                    toastr.success(res.message || "Role Updated Successfully!");
+                },
+                onError: err => {
+                    toastr.error(err.message || "Failed to update role");
+                }
+            },
+            "POST"
+        );
+    }
+    function DeleteRole(roleId) {
+        Swal.fire({
+            title: 'Are you sure?',
+            text: "You won't be able to revert this!",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#3085d6',
+            cancelButtonColor: '#d33',
+            confirmButtonText: 'Yes, delete it!',
+            cancelButtonText: 'Cancel'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                dynamicResponse(`/api/remove_role_by_Id/${roleId}`, {}, {
+                    onSuccess: (res) => {
+                        toastr.success(res.message || "Role deleted successfully!");
+                        LoadRoles(); // refresh table
+                    },
+                    onError: (err) => {
+                        toastr.error(err.message || "Failed to delete role");
+                    }
+                }, "POST"); // keep POST to match your API
+            }
+        });
+    }
+    //#endregion Role CRUD
+
+    //#region Master CRUD
+    function LoadMasterCategories() {
+        dynamicResponse("/api/get_master_categories", {}, {
+            onSuccess: (res) => {
+                let html = `<option value="">-- Select Category --</option>`;
+
+                res.data.forEach(cat => {
+                    html += `<option value="${cat}">${formatCategoryLabel(cat)}</option>`;
+                });
+
+                $("#ddlMasterCategory").html(html);
+
+                LoadAdminPanelDropdown();
+            },
+            onError: (err) => {
+                toastr.error(err.message || "Failed to load categories");
+            }
+        });
+    }
+    function OnChangeMasterDropdown(this_) {
+        const category = $(this_).val();
+        if (!category) {
+            clearMasterTable();
+            return;
+        }
+        LoadMasterCategoryList(category);
+    }
+    function LoadMasterCategoryList(category) {
+        dynamicResponse(`/api/get_master_category/${category}`, {}, {
+            onSuccess: (res) => {
+                let html = "";
+
+                if (!res.data || res.data.length === 0) {
+                    html = `<tr><td colspan="3" class="text-center text-muted">No data found</td></tr>`;
+                } else {
+                    res.data.forEach(item => {
+                        html += `<tr>`;
+                        html += `<td class="text-center">${item.code ?? "-"}</td>`;
+                        html += `<td class="text-center">${item.label ?? "-"}</td>`;
+                        html += `<td class="text-center">${item.order ?? "-"}</td>`;
+                        html += `<td class="text-center">`;
+                        html += `<button class="btn btn-sm btn-outline-primary me-2" onclick="GetAddEditMasterModal('${category}','${item.code}')"><i class="bi bi-pencil-square"></i></button>`;
+                        html += `<button class="btn btn-sm btn-outline-danger"onclick="DeleteMasterCategory('${category}','${item.code}')"><i class="bi bi-trash"></i></button>`;
+                        html += `</td>`;
+                        html += `</tr>`;
+                    });
+                }
+
+                dynamicTable({
+                    tableId: "tblMaster",
+                    html: html,
+                    data: [],
+                    buttonText: "+ Add New Master Category List",
+                    buttonOnClick: `GetAddEditMasterModal('${category}','')`,
+                    paging: true,
+                    pageLength: 50
+                });
+
+                LoadAdminPanelDropdown();
+            },
+            onError: (err) => {
+                toastr.error(err.message || "Failed to load category data");
+            }
+        });
+    }
+    function GetAddEditMasterModal(category = '', code = '') {
+        const isEdit = category == '' ? false : (code != '' ? true : false);
+        const modalTitle = category == '' ? "Add Master" : (code != '' ? "Edit Master List" : "Add Master List");
+        const btnText = isEdit ? "Update" : "Add";
+
+        var html = "";
+        html += `<form id="dynamicMasterForm">`;
+        html += `<input type="hidden" id="masterCategory" value="${category}">`;
+        html += `<input type="hidden" id="masterCode" value="${code}">`;
+
+        html += `<div class="mb-3">`;
+        html += `<label class="form-label">Code</label>`;
+        html += `<input type="text" class="form-control" id="txtCode" ${isEdit ? "readonly" : ""} required>`;
+        html += `</div>`;
+
+        html += `<div class="mb-3">`;
+        html += `<label class="form-label">Label</label>`;
+        html += `<input type="text" class="form-control" id="txtLabel" required>`;
+        html += `</div>`;
+
+        html += `<div class="mb-3">`;
+        html += `<label class="form-label">Order</label>`;
+        html += `<input type="number" class="form-control" id="txtOrder" required>`;
+        html += `</div>`;
+
+        html += `</form>`;
+
+        dynamicModal({
+            title: modalTitle,
+            content: html,
+            contentAction: function () {
+                if (isEdit) {
+                    dynamicResponse(`/api/get_master_item/${category}/${code}`, {}, {
+                        onSuccess: (res) => {
+                            const item = res.data;
+                            $("#txtCode").val(item.code);
+                            $("#txtLabel").val(item.label);
+                            $("#txtOrder").val(item.order);
+                        },
+                        onError: err => toastr.error(err.message || "Failed to load master data")
+                    });
+                }
+            },
+            btnAddEditText: btnText,
+            addEditOnClick: function () {
+                const masterCategory = $("#masterCategory").val() || '';
+                const masterCode = $("#masterCode").val() || '';
+                const masterData = {
+                    code: $("#txtCode").val().trim(),
+                    label: $("#txtLabel").val().trim(),
+                    order: parseInt($("#txtOrder").val()) || 0
+                };
+
+                AddEditMasterCategory(masterData, masterCategory, masterCode);
+
+                return true;
+            },
+            modalWidth: 20
+        });
+    }
+    function AddEditMasterCategory(masterData, masterCategory = '', masterCode = '') {
+        dynamicResponse(
+            `/api/add_edit_master?masterCategory=${masterCategory}&masterCode=${masterCode}`,
+            masterData,
+            {
+                onSuccess: res => {
+                    const isEdit = masterCategory == '' ? false : true;
+                    if (isEdit) {
+                        LoadMasterCategoryList(masterCategory);
+                    }
+                    else {
+                        LoadMasterCategories();
+                    }
+                    toastr.success(res.message || `Master Updated Successfully!`);
+                },
+                onError: err => toastr.error(err.message || `Failed to update ${masterCategory}`)
+            },
+            "POST"
+        );
+    }
+    function DeleteMasterCategory(masterCategory, masterCode) {
+        Swal.fire({
+            title: 'Are you sure?',
+            text: "You won't be able to revert this!",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#3085d6',
+            cancelButtonColor: '#d33',
+            confirmButtonText: 'Yes, delete it!',
+            cancelButtonText: 'Cancel'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                dynamicResponse(`/api/remove_master_by_code/${masterCategory}/${masterCode}`, {}, {
+                    onSuccess: (res) => {
+                        toastr.success(res.message || `Master Category deleted successfully!`);
+                        LoadMasterCategoryList(masterCategory);
+                    },
+                    onError: (err) => toastr.error(err.message || `Failed to delete ${masterCode}`)
+                }, "POST");
+            }
+        });
+    }
+    function clearMasterTable() {
+        dynamicTable({
+            tableId: "tblMaster",
+            html: "",
+            data: [],
+            paging: false
+        });
+    }
+    function formatCategoryLabel(text) {
+        return text
+            .replace(/([A-Z])/g, " $1")
+            .replace(/^./, s => s.toUpperCase());
+    }
+    //#endregion Master CRUD
+
+</script>
+{% endblock %}

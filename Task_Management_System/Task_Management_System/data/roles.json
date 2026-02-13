@@ -1,0 +1,14 @@
+[
+  {
+    "roleId": 1,
+    "rolename": "Super Admin"
+  },
+  {
+    "roleId": 2,
+    "rolename": "Admin"
+  },
+  {
+    "rolename": "Developer",
+    "roleId": 3
+  }
+]

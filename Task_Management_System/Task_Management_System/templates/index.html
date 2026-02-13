@@ -1,0 +1,11 @@
+﻿{% extends "layout.html" %}
+
+{% block content %}
+
+{% if user_info.roleId in [1, 2] %}
+    {% include "admin_dashboard.html" %}
+{% else %}
+    {% include "user_dashboard.html" %}
+{% endif %}
+
+{% endblock %}

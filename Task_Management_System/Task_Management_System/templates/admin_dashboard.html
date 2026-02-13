@@ -1,0 +1,434 @@
+﻿
+<style>
+    /* Kanban Board */
+    .kanban-board {
+        display: flex;
+        gap: 20px;
+        overflow-x: auto;
+        padding-bottom: 10px;
+    }
+
+    /* Columns */
+    .kanban-column {
+        background: var(--secondary-color);
+        border-radius: 12px;
+        flex: 1;
+        min-width: 280px;
+        max-width: 350px;
+        display: flex;
+        flex-direction: column;
+        padding: 15px;
+    }
+
+        .kanban-column h2 {
+            font-size: 1.3rem;
+            margin-bottom: 15px;
+            color: #fff !important;
+            text-align: center;
+            border-bottom: 1px solid #bdc3c7;
+            padding-bottom: 5px;
+        }
+
+    .task-counter-card {
+        flex: 0 0 auto;
+        /* prevent shrinking */
+        background: #fff;
+        padding: 12px 18px;
+        border-radius: 8px;
+        box-shadow: 0 3px 8px rgba(0, 0, 0, 0.08);
+        text-align: center;
+        min-width: 110px;
+        cursor: default;
+        transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+        .task-counter-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 12px rgba(0, 0, 0, 0.15);
+        }
+
+    .task-counter-title {
+        font-size: 0.85rem;
+        color: #7f8c8d;
+        margin-bottom: 5px;
+        text-transform: uppercase;
+    }
+
+    .task-counter-number {
+        font-size: 1.2rem;
+        font-weight: 600;
+        color: #34495e;
+    }
+
+    /* Cards */
+    .kanban-card {
+        position: relative;
+        /* Needed for badge positioning */
+        background: #fff;
+        padding: 12px 15px;
+        margin-bottom: 12px;
+        border-radius: 10px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.08);
+        cursor: grab;
+        display: flex;
+        flex-direction: column;
+        height: 220px;
+        transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+        .kanban-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.12);
+        }
+
+        .kanban-card.dragging {
+            opacity: 0.6;
+            transform: scale(1.05);
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+        }
+
+
+    .kanban-column.drag-over {
+        border: 2px dashed #3498db;
+    }
+
+    /* Card Content */
+    .card-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .card-title {
+        font-size: 0.82rem;
+        color: var(--primary-color) !important;
+        font-weight: 500;
+        margin-bottom: 6px;
+    }
+
+    .badge {
+        padding: 2px 6px;
+        border-radius: 12px;
+        font-size: 12px;
+        text-transform: capitalize;
+        white-space: nowrap;
+    }
+
+    .card-content {
+        font-size: 0.78rem;
+        color: #7f8c8d;
+        margin-bottom: 6px;
+        overflow-y: auto;
+        overflow-x: hidden;
+        line-height: 1.3rem;
+    }
+
+        .card-content::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .card-content::-webkit-scrollbar-thumb {
+            background: #bdc3c7;
+            border-radius: 3px;
+        }
+
+    @media (max-width: 576px) {
+        .task-counter-bar {
+            padding: 8px;
+            gap: 10px;
+        }
+
+        .task-counter-card {
+            min-width: 90px;
+            padding: 10px 12px;
+        }
+
+        .task-counter-title {
+            font-size: 0.75rem;
+        }
+
+        .task-counter-number {
+            font-size: 1rem;
+        }
+    }
+</style>
+
+<!--#region Tabs -->
+<ul id="appTabs" class="nav nav-tabs">
+    <li><a class="nav-link active" data-tab="dashboard" data-load="LoadDashboard">Dashboard</a></li>
+    <li><a class="nav-link" data-tab="tasks" data-load="LoadMainTasks">Tasks</a></li>
+    <li><a class="nav-link" data-tab="dailyTasks" data-load="LoadDailyTasks">Daily Tasks</a></li>
+</ul>
+<!--#endregion Tabs -->
+<!--#region Tab Content -->
+<div id="tabContent" class="mt-4">
+    <div class="tab-pane" id="dashboard"></div>
+    <div class="tab-pane" id="tasks">
+        <div class="kanban-board" id="mainTasks"></div>
+    </div>
+    <div class="tab-pane kanban-board" id="dailyTasks"></div>
+</div>
+<!--#endregion Tab Content -->
+
+<script>
+
+    //#region Load Tabs
+    dynamicTabs({
+        defaultTab: 'tasks'
+    });
+    //#endregion Load Tabs
+
+    function LoadMainTasks() {
+        dynamicResponse(`/api/get_user_main_tasks`, {}, {
+            onSuccess: (res) => {
+                renderMainTaskBoard(res.data);
+            },
+            onError: (err) => {
+                toastr.error(err.message);
+            }
+        });
+    }
+
+    let draggedCard = null;
+    function renderMainTaskBoard(data) {
+        const board = document.getElementById('mainTasks');
+        board.innerHTML = '';
+
+        data.tasks_status.forEach(statusObj => {
+            const { status_code, status } = statusObj;
+
+            const column = document.createElement('div');
+            column.className = 'kanban-column';
+            column.dataset.status = status_code;
+
+            const title = document.createElement('h2');
+            title.innerHTML = `<div style="display:flex; justify-content:space-between; align-items:center;"><span>${status}</span><span class="badge bg-info">${data.status_counter?.[status] ?? 0}</span></div>`;
+            column.appendChild(title);
+
+            var tasks = data.tasks_by_status[status_code] || [];
+            tasks.forEach(task => {
+                const tempDiv = document.createElement('div');
+                tempDiv.innerHTML = createCard(task);
+                const card = tempDiv.firstElementChild;
+
+                // RULE: REVIEW tasks cannot be dragged
+                if (status_code !== "REVIEW") {
+                    card.draggable = true;
+
+                    card.addEventListener('dragstart', () => {
+                        draggedCard = card;
+                        card.classList.add('dragging');
+                    });
+                    card.addEventListener('dragend', () => {
+                        draggedCard = null;
+                        card.classList.remove('dragging');
+                    });
+                }
+
+                column.appendChild(card);
+            });
+
+            // Column Drag & Drop
+            column.addEventListener('dragover', e => {
+                e.preventDefault();
+                // RULE: Cannot drop into ASSIGNED column
+                if (column.dataset.status !== "ASSIGNED") {
+                    column.classList.add('drag-over');
+                }
+            });
+
+            column.addEventListener('dragleave', () => column.classList.remove('drag-over'));
+
+            column.addEventListener('drop', () => {
+                column.classList.remove('drag-over');
+                if (!draggedCard) return;
+
+                const taskId = parseInt(draggedCard.dataset.id);
+                const taskAssignId = parseInt(draggedCard.dataset.taskassignid, 10);
+                const oldstatus = draggedCard.dataset.oldstatus;
+                const workstatus = draggedCard.dataset.workstatus;
+                const new_status = column.dataset.status;
+
+                const leadBy = draggedCard.dataset.leadBy;
+
+                // RULE: Prevent dropping into ASSIGNED column
+                if (new_status === "ASSIGNED") {
+                    toastr.error("Can't Drop Task To Assigned");
+                    return;
+                }
+
+                if (new_status === "REVIEW") {
+                    toastr.error("Can't Drop Task To Review");
+                    return;
+                }
+
+                var objJson = new Object();
+                objJson.taskId = taskId;
+                objJson.taskAssignId = taskAssignId;
+
+                if (new_status === "COMPLETED" && oldstatus === "COMPLETED" && workstatus === "APPROVED") {
+                    Swal.fire({
+                        title: 'Task Already Completed!',
+                        text: 'You can reopen the task and select a new status.',
+                        icon: 'warning',
+                        input: 'select',
+                        inputOptions: {
+                            "NOT_STARTED": "Not Started",
+                            "IN_PROGRESS": "In Progress",
+                        },
+                        inputPlaceholder: 'Select new status',
+                        showCancelButton: true,
+                        confirmButtonText: 'Update Status',
+                        cancelButtonText: 'Cancel'
+                    }).then((result) => {
+                        if (result.isConfirmed && result.value) {
+                            objJson.new_status = result.value;
+                            UpdateTask(objJson);
+                        }
+                    });
+                }
+                else if (new_status === "COMPLETED") {
+                    Swal.fire({
+                        title: 'Task Completed!',
+                        html: `This task is now going for approval. Lead by: <b>${leadBy}</b>`,
+                        icon: 'info',
+                        input: 'textarea',
+                        inputPlaceholder: 'Enter approval comment...',
+                        showCancelButton: true,
+                        confirmButtonText: 'Send for Approval',
+                        cancelButtonText: 'Cancel',
+                        preConfirm: (comment) => {
+                            if (!comment || comment.trim() === "") {
+                                Swal.showValidationMessage('Please enter a comment for approval');
+                            }
+                            return comment.trim();
+                        }
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            objJson.new_status = new_status;
+                            objJson.submitComment = result.value;
+                            UpdateTask(objJson);
+                        }
+                    });
+                }
+                else {
+                    objJson.new_status = new_status;
+                    UpdateTask(objJson);
+                }
+            });
+
+            board.appendChild(column);
+        });
+    }
+
+    function UpdateTask(requestData) {
+        dynamicResponse(
+            `/api/update_main_task_status`,
+            requestData,
+            {
+                onSuccess: res => {
+                    LoadMainTasks();
+                    toastr.success(res.message);
+                },
+                onError: err => {
+                    toastr.error(err.message || "Failed to update");
+                }
+            },
+            "POST"
+        );
+    }
+
+    function createCard(task) {
+        console.log(task)
+        // ------------- Status Badge ----------------
+        let statusBadgeClass = "";
+        switch (task.status) {
+            case 'Not Started': statusBadgeClass = 'bg-secondary'; break;
+            case 'In Progress': statusBadgeClass = 'bg-primary'; break;
+            case 'Complete': statusBadgeClass = 'bg-success'; break;
+            case 'On Hold': statusBadgeClass = 'bg-warning text-dark'; break;
+            default: statusBadgeClass = 'bg-info'; break;
+        }
+
+        // ------------- Priority Badge ----------------
+        let priorityBadgeClass = "";
+        switch (task.priority) {
+            case 'High': priorityBadgeClass = 'bg-danger'; break;
+            case 'Medium': priorityBadgeClass = 'bg-warning text-dark'; break;
+            case 'Low': priorityBadgeClass = 'bg-success'; break;
+            default: priorityBadgeClass = 'bg-info'; break;
+        }
+
+        // ------------- Badges ----------------
+        let leadBadge = task.isLead ? `<span class="badge bg-dark me-1">Lead</span>` : "";
+        let subTaskBadge = task.totalSubTasks > 0 ? `<span class="badge bg-info me-1">Subtask (${task.totalSubTasks})</span>` : "";
+        let priorityBadge = task.priority != "" ? `<span class="badge ${priorityBadgeClass} me-1">${task.priority}</span>` : "";
+
+        let workStatusBadge = task.work_status != "" ? `<span class="badge ${statusBadgeClass}">${task.work_status}</span>` : "";
+        let leadByBadge = task.leadBy != null ? `<span class="badge bg-info me-1">Lead By ${task.leadBy}</span>` : "";
+        let statusBadge = task.status != "" ? `<span class="badge ${statusBadgeClass}">${task.status}</span>` : "";
+
+        // ------------- Approval Buttons ----------------
+        let approvalHtml = "";
+        if (task.isLead && task.approvalStatus === 'PENDING_APPROVAL') {
+            approvalHtml = `<div class="approval-buttons mt-2">`;
+            approvalHtml += `<button class="btn btn-success btn-sm me-1" onclick="approveTask(${task.taskId})">Approve</button>`;
+            approvalHtml += `<button class="btn btn-danger btn-sm" onclick="rejectTask(${task.taskId})">Reject</button>`;
+            approvalHtml += `</div>`;
+        }
+
+        // ------------- Duration Safe ----------------
+        let durationText = "-";
+        if (task.duration) {
+            durationText = `${task.duration.days}d ${task.duration.hours}h ${task.duration.minutes}m`;
+        }
+
+        // ------------- Remaining Days Safe ----------------
+        let remainingDaysText = task.remainingDays !== null ? task.remainingDays : "-";
+
+        // ------------- Format ETA Date ----------------
+        let etaText = "-";
+        if (task.eta_datetime) {
+            let eta = new Date(task.eta_datetime);
+            if (!isNaN(eta)) {
+                let day = String(eta.getDate()).padStart(2, "0");
+                let monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+                let month = monthNames[eta.getMonth()];
+                let year = String(eta.getFullYear()).slice(-2); // last two digits
+                let hours = String(eta.getHours()).padStart(2, "0");
+                let minutes = String(eta.getMinutes()).padStart(2, "0");
+                etaText = `${day} ${month} ${year} ${hours}:${minutes}`;
+            }
+        }
+
+        let card = "";
+        card += `<div class="kanban-card" draggable="true" data-id="${task.taskId}" data-taskAssignId="${task.taskAssignId}" data-oldstatus="${task.status_code}" data-workstatus="${task.work_status_code}" data-leadBy="${task.leadBy}">`;
+
+        card += `<div class="card-title">${task.taskName} ${leadBadge} <span class="view-icon cursor-pointer" onclick="showTaskModal('${task.taskName}','${task.taskdetail}')">🔍</span></div>`;
+
+        card += `<div class="card-header mb-2"><span class="badge bg-info">${task.username}</span> ${leadBadge} ${subTaskBadge} ${priorityBadge}</div>`;
+        card += `<div class="card-header mb-2">${workStatusBadge} ${leadByBadge} ${statusBadge}</div>`;
+
+        card += approvalHtml;
+
+        card += `<div class="card-content">`;
+        if (task.totalSubTasks > 0) {
+            card += `Sub Tasks: ${task.totalSubTasks}<br>`;
+        }
+        card += `Assigned At: ${task.assigned_date || '-'}<br>`;
+        card += `Started At: ${task.startedAt || '-'} | Completed At: ${task.completedAt || '-'}<br>`;
+        card += `Duration: ${durationText}<br>`;
+        card += `ETA: ${etaText} | Remaining Days: ${remainingDaysText}<br>`;
+        card += `<span class="text-danger">${task.durationMsg}</span><br>`;
+        if (task.reviewedBy != null) {
+            card += `Reviewed By: ${task.reviewedBy} | Review Comment: ${task.reviewComment}<br>`;
+        }
+        card += `</div>`;
+
+        card += `</div>`;
+
+        return card;
+    }
+
+</script>

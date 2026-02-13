@@ -1,0 +1,30 @@
+[
+  {
+    "userPointId": 1,
+    "userId": 2,
+    "points": 2,
+    "pointsDescription": "User changed task status to In Progress",
+    "pointDate": "2026-02-10"
+  },
+  {
+    "userPointId": 2,
+    "userId": 2,
+    "points": 10,
+    "pointsDescription": "Task completed within ETA",
+    "pointDate": "2026-02-10"
+  },
+  {
+    "userPointId": 3,
+    "userId": 2,
+    "points": -1,
+    "pointsDescription": "Task overdue penalty per day",
+    "pointDate": "2026-02-09"
+  },
+  {
+    "userPointId": 4,
+    "userId": 2,
+    "points": 3,
+    "pointsDescription": "User completed a subtask",
+    "pointDate": "2026-02-10"
+  }
+]

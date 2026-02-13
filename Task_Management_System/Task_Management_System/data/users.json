@@ -1,0 +1,29 @@
+[
+  {
+    "name": "Hammas Khan",
+    "email": "hammas426627@gmail.com",
+    "username": "HAMMAS.KHAN",
+    "roleId": 1,
+    "password": "123",
+    "userId": 1,
+    "active": "true"
+  },
+  {
+    "name": "Hemi Khan",
+    "email": "hemikhan01@gmail.com",
+    "username": "HEMI.KHAN",
+    "roleId": 3,
+    "password": "123",
+    "userId": 2,
+    "active": "true"
+  },
+  {
+    "name": "Test Khan",
+    "email": "test@gmail.com",
+    "username": "TEST.KHAN",
+    "roleId": 3,
+    "password": "123",
+    "userId": 3,
+    "active": "true"
+  }
+]

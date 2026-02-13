@@ -1,0 +1,65 @@
+[
+  {
+    "pointsId": 1,
+    "pointType": "TASK_STATUS_CHANGE",
+    "pointAction": "IN_PROGRESS",
+    "points": 2,
+    "pointsDescription": "User changed task status to In Progress"
+  },
+  {
+    "pointsId": 2,
+    "pointType": "TASK_STATUS_CHANGE",
+    "pointAction": "COMPLETED_WITH_IN_ETA",
+    "points": 10,
+    "pointsDescription": "Task completed within ETA"
+  },
+  {
+    "pointsId": 4,
+    "pointType": "TASK_STATUS_CHANGE",
+    "pointAction": "COMPLETED_AFTER_2_DAYS_ETA",
+    "points": 5,
+    "pointsDescription": "Task completed after grace period"
+  },
+  {
+    "pointsId": 5,
+    "pointType": "DAILY_TASK",
+    "pointAction": "ADDED",
+    "points": 4,
+    "pointsDescription": "Daily Task added on time"
+  },
+  {
+    "pointsId": 5,
+    "pointType": "MAIN_TASK",
+    "pointAction": "COMPLETE",
+    "points": 7,
+    "pointsDescription": "Main Task completed"
+  },
+  {
+    "pointsId": 5,
+    "pointType": "SUB_TASK",
+    "pointAction": "COMPLETE",
+    "points": 5,
+    "pointsDescription": "Sub Task completed"
+  },
+  {
+    "pointsId": 5,
+    "pointType": "NEGATIVE_ACTIONS",
+    "pointAction": "TASK_REOPEND",
+    "points": -3,
+    "pointsDescription": "User reopened a completed task"
+  },
+  {
+    "pointsId": 5,
+    "pointType": "NEGATIVE_ACTIONS",
+    "pointAction": "TASK_OVERDUE",
+    "points": -1,
+    "pointsDescription": "Task overdue penalty per day"
+  },
+  {
+    "pointsId": 3,
+    "pointType": "NEGATIVE_ACTIONS",
+    "pointAction": "COMPLETED_AFTER_ETA",
+    "points": -5,
+    "pointsDescription": "Task completed within ETA"
+  }
+]

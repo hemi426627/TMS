@@ -1,0 +1,95 @@
+{
+  "taskStatus": [
+    {
+      "code": "NOT_STARTED",
+      "label": "Not Started",
+      "order": 1
+    },
+    {
+      "code": "IN_PROGRESS",
+      "label": "In Progress",
+      "order": 2
+    },
+    {
+      "code": "COMPLETED",
+      "label": "Completed",
+      "order": 3
+    },
+    {
+      "code": "ON_HOLD",
+      "label": "On Hold",
+      "order": 4
+    }
+  ],
+  "workStatus": [
+    {
+      "code": "UN_ASSIGNED",
+      "label": "Un Assigned",
+      "order": 1
+    },
+    {
+      "code": "ASSIGNED",
+      "label": "Assigned",
+      "order": 2
+    },
+    {
+      "code": "NOT_STARTED",
+      "label": "Not Started",
+      "order": 3
+    },
+    {
+      "code": "WORKING",
+      "label": "Working",
+      "order": 4
+    },
+    {
+      "code": "PENDING_APPROVAL",
+      "label": "Pending Approval",
+      "order": 5
+    },
+    {
+      "code": "APPROVED",
+      "label": "Approved",
+      "order": 6
+    },
+    {
+      "code": "REJECTED",
+      "label": "Rejected",
+      "order": 7
+    }
+  ],
+  "priority": [
+    {
+      "code": "LOW",
+      "label": "Low",
+      "order": 2
+    },
+    {
+      "code": "MEDIUM",
+      "label": "Medium",
+      "order": 1
+    },
+    {
+      "code": "HIGH",
+      "label": "High",
+      "order": 3
+    },
+    {
+      "code": "CRITICAL",
+      "label": "Critical",
+      "order": 4
+    }
+  ],
+  "entityType": [
+    {
+      "code": "TASK",
+      "label": "Task",
+      "order": 2
+    },
+    {
+      "code": "APPROVAL",
+      "label": "Approval",
+      "order": 1
+    }
+  ]
+}
